@@ -1,11 +1,10 @@
 from langchain_core.tools import tool
 from typing import Dict, List
 from pydantic import BaseModel, Field
-from sentence_transformers import SentenceTransformer
-import torch
 import dotenv
 import os
 from qdrant_client import QdrantClient
+import requests
 
 if os.getenv("QDRANT_API_KEY") is None or os.getenv("QDRANT_CLUSTER_ENDPOINT") is None:
     dotenv.load_dotenv()
@@ -20,17 +19,30 @@ class SearchInput(BaseModel):
     query: str = Field(description="The student's medical question.")
     # num_chunks: int = Field(default=5, description="Number of relevant chunks to retrieve.")
 
-def setup_device() -> torch.device:
-    if torch.backends.mps.is_available():
-        return torch.device("mps")
-    return torch.device("cpu")
+# def setup_device() -> torch.device:
+#     if torch.backends.mps.is_available():
+#         return torch.device("mps")
+#     return torch.device("cpu")
 
 def run_query(query_text, n_results):
-    device = setup_device()
-    model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2").to(device)
-    embedding = model.encode(sentences=query_text, device=device).tolist()
-
+    # device = setup_device()
+    # model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2").to(device)
+    # embedding = model.encode(sentences=query_text, device=device).tolist()
     try:
+        response = requests.post(
+            "https://openrouter.ai/api/v1/embeddings",
+            headers={
+                "Authorization": f"Bearer {os.getenv("OPENROUTER_API_KEY")}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": "sentence-transformers/all-mpnet-base-v2",
+                "input": query_text
+            }
+        )
+
+        data = response.json()
+        embedding = data["data"][0]["embedding"]
         results = qdrant_client.query_points(
             collection_name="DC_Dutta",
             query=embedding,
