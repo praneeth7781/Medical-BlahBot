@@ -7,12 +7,14 @@ import dotenv
 import os
 from qdrant_client import QdrantClient
 
-if os.environ.get("QDRANT_API_KEY") is None or os.environ.get("QDRANT_CLUSTER_ENDPOINT") is None:
+if os.getenv("QDRANT_API_KEY") is None or os.getenv("QDRANT_CLUSTER_ENDPOINT") is None:
     dotenv.load_dotenv()
+print("Initialising qdrant client")
 qdrant_client = QdrantClient(
     url=os.environ["QDRANT_CLUSTER_ENDPOINT"],
     api_key=os.environ["QDRANT_API_KEY"]
 )
+print("Initialised qdrant client")
 
 class SearchInput(BaseModel):
     query: str = Field(description="The student's medical question.")

@@ -8,7 +8,7 @@ app = FastAPI(title="Medical Reference Chatbot")
 # Store active sessions: session_id -> Graph instance
 sessions: dict[str, Graph] = {}
 
-
+print("=== APP STARTING ===", flush=True)
 @app.websocket("/ws/{session_id}")
 async def websocket_endpoint(websocket: WebSocket, session_id: str):
     await websocket.accept()
@@ -52,6 +52,7 @@ async def health_check():
     return {"status": "healthy", "active_sessions": len(sessions)}
 
 
+print("=== APP LOADED, STARTING UVICORN ===", flush=True)
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 30080)))
